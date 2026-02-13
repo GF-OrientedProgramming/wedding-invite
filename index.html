@@ -641,7 +641,7 @@
         }
 
         // 音乐控制按钮点击
-        document.getElementById('music-btn').addEventListener('click', function() {
+        document.getElementById('music-btn').addEventListener('click', function(e) {
 
             //阻止时间冒泡，防止点击按钮时，触发document的点击事件（导致逻辑冲突）
             e.stopPropagation();

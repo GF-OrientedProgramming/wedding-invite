@@ -353,7 +353,9 @@
     </div>
 
     <!-- 背景音乐 -->
-    <audio id="bg-music" loop playsinline preload="auto"></audio>
+    <!-- 关键修改：增加 playsinline 属性 -->
+    <audio id="bg-music" loop playsinline></audio>
+    
     <div class="music-control" id="music-btn">
         <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
     </div>
@@ -478,15 +480,16 @@
         // --- 1. 数据加载逻辑 (核心) ---
         const urlParams = new URLSearchParams(window.location.search);
         const inviteId = urlParams.get('id') || 'demo';
-        // 注意：请确保这里修改为您自己的用户名
-        const dataUrl = `https://GF-OrientedProgramming.github.io/wedding-invite/data/${inviteId}.json`;
+        // 使用相对路径，避免中文用户名 CORS 问题
+        const dataUrl = `data/${inviteId}.json`;
 
         let weddingDateObj = null; // 存储解析后的婚礼日期，供倒计时使用
 
         document.addEventListener('DOMContentLoaded', () => {
             fetchData(dataUrl);
             initAnimations();
-            initAutoPlay(); // 初始化自动播放逻辑
+            // 页面加载完成后，直接尝试播放音乐
+            tryPlayMusic();
         });
 
         async function fetchData(url) {
@@ -608,56 +611,41 @@
             galleryObserver.observe(document.getElementById('photo-gallery'), { childList: true });
         }
 
-        // --- 3. 音乐自动播放逻辑 ---
-        let hasInteracted = false;
-
-        function enableAudio() {
-            if (hasInteracted) return;
-            hasInteracted = true;
-            
+        // --- 3. 音乐播放逻辑 (精简版，无冲突) ---
+        function tryPlayMusic() {
             const audio = document.getElementById('bg-music');
-            // --- 新增：强制设置音量为最大 ---
-            audio.volume = 1.0;
-            
+            if (!audio.src) return; // 没有源则不播放
+
             // 尝试播放
             const playPromise = audio.play();
             
             if (playPromise !== undefined) {
                 playPromise.then(_ => {
-                    // 播放成功，显示旋转图标
+                    // 自动播放成功
                     document.getElementById('music-btn').classList.add('playing');
                 })
                 .catch(error => {
-                    console.log("自动播放被阻止，等待手动点击");
+                    // 自动播放失败（通常是因为浏览器策略），这不重要，等待用户点击按钮即可
+                    console.log("自动播放被浏览器拦截，需手动点击图标播放");
                 });
             }
         }
 
-        function initAutoPlay() {
-            // 监听全文档的第一次点击事件
-            document.body.addEventListener('click', enableAudio, { once: true });
-            // 监听触摸事件（适配手机）
-            document.body.addEventListener('touchstart', enableAudio, { once: true });
-        }
-
         // 音乐控制按钮点击
-        document.getElementById('music-btn').addEventListener('click', function(e) {
-
-            //阻止时间冒泡，防止点击按钮时，触发document的点击事件（导致逻辑冲突）
-            e.stopPropagation();
+        document.getElementById('music-btn').addEventListener('click', function() {
             const audio = document.getElementById('bg-music');
+            
             if (audio.paused) {
-                // 如果是暂停状态，则播放
                 audio.play().then(() => {
-                   this.classList.add('playing');
+                    this.classList.add('playing');
                 }).catch(err => {
-                   console.log("播放失败:", err);
+                    console.error("播放失败:", err);
+                    alert("播放失败，请检查音乐文件链接是否正确");
                 });
-             } else {
-             // 如果是播放状态，则暂停
-                 audio.pause();
-                 this.classList.remove('playing');
-             }
+            } else {
+                audio.pause();
+                this.classList.remove('playing');
+            }
         });
 
         // 倒计时逻辑

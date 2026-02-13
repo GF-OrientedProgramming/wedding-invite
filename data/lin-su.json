@@ -1,0 +1,22 @@
+{
+  "groom": "林慕白",
+  "bride": "苏浅浅",
+  "date": "2026-05-16",
+  "time": "16:28",
+  "ceremonyTime": "17:08",
+  "city": "杭州",
+  "location": "云顶·星空艺术宴会厅 (Starry Art Hall)",
+  "address": "杭州市西湖区南山路1314号",
+  "groomPhone": "138-9834-9473",
+  "bridePhone": "139-8764-3721",
+  "inviteText": "在这春暖花开的季节，我们要结婚了。诚挚邀请您见证我们的幸福时刻！",
+  "coverImage": "https://picsum.photos/seed/wedding/800/1200",
+  "photos": [
+    "https://github.com/GF-OrientedProgramming/wedding-invite/raw/main/assets/image_1.png",
+    "https://github.com/GF-OrientedProgramming/wedding-invite/raw/main/assets/image_2.jpg",
+    "https://github.com/GF-OrientedProgramming/wedding-invite/raw/main/assets/image_3.jpg",
+    "https://github.com/GF-OrientedProgramming/wedding-invite/raw/main/assets/image_4.jpg",
+    "https://github.com/GF-OrientedProgramming/wedding-invite/raw/main/assets/image_5.jpg"
+  ],
+  "music": "https://github.com/GF-OrientedProgramming/wedding-invite/raw/main/assets/windyHill.mp3"
+}

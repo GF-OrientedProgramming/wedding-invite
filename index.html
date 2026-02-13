@@ -608,7 +608,7 @@
                     }
                 });
             });
-            galleryObserver.observe(document.getElementById('photo-gallery'));
+            galleryObserver.observe(document.getElementById('photo-gallery'), { childList: true });
         }
 
         // 音乐控制

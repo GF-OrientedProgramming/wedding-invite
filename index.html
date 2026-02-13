@@ -129,16 +129,13 @@
         .img-editorial {
             overflow: hidden;
             background-color: var(--color-muted-bg);
-            filter: sepia(5%);
+            filter: sepia(5%); 
             transition: all 0.5s ease;
             border-radius: 2px;
-    
-            /* --- 新增以下两行 --- */
             width: 100%; 
             min-height: 300px; /* 强制最小高度，防止塌陷 */
-    /* ------------------ */
+            position: relative; /* 确保子元素定位正确 */
         }
-
         
         .img-editorial img {
             width: 100%;
@@ -146,6 +143,9 @@
             object-fit: cover;
             display: block;
             transition: transform 1.5s ease;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
 
         .img-editorial:hover img {
@@ -156,7 +156,7 @@
         section {
             padding: 5rem 2rem;
             position: relative;
-            max-width: 1000px; /* 稍微收窄一点，更精致 */
+            max-width: 1000px;
             margin: 0 auto;
             text-align: center;
         }
@@ -499,16 +499,16 @@
                 loading.style.opacity = '0';
                 setTimeout(() => loading.style.display = 'none', 500);
 
-                // 尝试自动播放音乐
+                // 尝试自动播放音乐 (独立try-catch，不影响页面渲染)
                 try {
                     const audio = document.getElementById('bg-music');
-                    if(data.music) {
+                    if(data.music && data.music.trim() !== "") {
                         audio.src = data.music;
                         audio.play().then(() => {
                             document.getElementById('music-btn').classList.add('playing');
                         }).catch(e => console.log("等待用户交互播放音乐"));
                     }
-                } catch(e) { console.log(e); }
+                } catch(e) { console.log("音乐加载忽略", e); }
 
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -562,26 +562,27 @@
             gallery.innerHTML = ''; // 清空占位图
             if (data.photos && data.photos.length > 0) {
                 data.photos.forEach((photoUrl, index) => {
-                const div = document.createElement('div');
-                div.className = 'img-editorial fade-in';
-                div.style.transitionDelay = `${index * 100}ms`; 
-        
-                const img = document.createElement('img');
-                img.src = photoUrl;
-                img.alt = "Wedding Photo";
-                img.style.display = 'block'; // 强行块级显示
-        
-                // 调试代码：如果图片加载失败，控制台会打印链接
-                img.onerror = function() {
-                    console.error("图片加载失败:", photoUrl);
-                    this.style.display = 'none'; // 隐藏坏掉的图片
-                };
+                    const div = document.createElement('div');
+                    div.className = 'img-editorial fade-in';
+                    // 添加交错延迟动画
+                    div.style.transitionDelay = `${index * 100}ms`; 
+                    
+                    const img = document.createElement('img');
+                    img.src = photoUrl;
+                    img.alt = "Wedding Photo";
+                    img.style.display = 'block'; // 强行块级显示
+                    
+                    // 调试代码：如果图片加载失败，控制台会打印链接
+                    img.onerror = function() {
+                        console.error("图片加载失败:", photoUrl);
+                        this.style.display = 'none'; // 隐藏坏掉的图片
+                    };
 
-                div.appendChild(img);
-               gallery.appendChild(div);
-    });
-}
-
+                    div.appendChild(img);
+                    gallery.appendChild(div);
+                });
+            }
+        }
 
         // --- 2. 动画与交互逻辑 ---
         function initAnimations() {
@@ -608,6 +609,7 @@
                     }
                 });
             });
+            // 修复：添加配置对象
             galleryObserver.observe(document.getElementById('photo-gallery'), { childList: true });
         }
 

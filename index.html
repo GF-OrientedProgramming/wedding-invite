@@ -642,14 +642,22 @@
 
         // 音乐控制按钮点击
         document.getElementById('music-btn').addEventListener('click', function() {
+
+            //阻止时间冒泡，防止点击按钮时，触发document的点击事件（导致逻辑冲突）
+            e.stopPropagation();
             const audio = document.getElementById('bg-music');
             if (audio.paused) {
-                audio.play();
-                this.classList.add('playing');
-            } else {
-                audio.pause();
-                this.classList.remove('playing');
-            }
+                // 如果是暂停状态，则播放
+                audio.play().then(() => {
+                   this.classList.add('playing');
+                }).catch(err => {
+                   console.log("播放失败:", err);
+                });
+             } else {
+             // 如果是播放状态，则暂停
+                 audio.pause();
+                 this.classList.remove('playing');
+             }
         });
 
         // 倒计时逻辑

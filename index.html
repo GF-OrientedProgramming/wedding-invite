@@ -354,7 +354,9 @@
 
     <!-- 背景音乐 -->
     <!-- 增加 src="" 防止初始化报错 -->
-    <audio id="bg-music" loop playsinline src=""></audio>
+    <!-- 增加 controlsList="nodownload" 和 webkit-playsinline -->
+    <audio id="bg-music" loop playsinline webkit-playsinline preload="auto" src=""></audio>
+
     
     <div class="music-control" id="music-btn">
         <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>

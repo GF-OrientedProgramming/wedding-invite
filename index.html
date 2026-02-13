@@ -353,8 +353,8 @@
     </div>
 
     <!-- 背景音乐 -->
-    <!-- 关键修改：增加 playsinline 属性 -->
-    <audio id="bg-music" loop playsinline src="https://github.com/GF-OrientedProgramming/wedding-invite/raw/main/assets/bgm.mp4"></audio>
+    <!-- 增加 src="" 防止初始化报错 -->
+    <audio id="bg-music" loop playsinline src=""></audio>
     
     <div class="music-control" id="music-btn">
         <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
@@ -488,8 +488,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             fetchData(dataUrl);
             initAnimations();
-            // 页面加载完成后，直接尝试播放音乐
-            tryPlayMusic();
         });
 
         async function fetchData(url) {
@@ -583,6 +581,43 @@
                     gallery.appendChild(div);
                 });
             }
+
+            // --- 7. 音乐加载逻辑 (重点修改：安全加载模式) ---
+            const audio = document.getElementById('bg-music');
+            const musicBtn = document.getElementById('music-btn');
+            
+            // 只有当配置里有音乐链接，且链接不为空时才处理
+            if (data.music && data.music.trim() !== "") {
+                // 步骤 A: 先暂停并重置当前音频（防止冲突）
+                audio.pause();
+                audio.currentTime = 0;
+                
+                // 步骤 B: 移除旧的监听器（防止多次触发）
+                audio.removeEventListener('canplay', handleCanPlay);
+                
+                // 步骤 C: 设置新源
+                audio.src = data.music;
+                audio.load(); // 强制浏览器开始加载新资源
+
+                // 步骤 D: 定义“准备好”后的处理函数
+                function handleCanPlay() {
+                    console.log("音频资源已就绪，尝试播放...");
+                    // 尝试播放
+                    const playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(_ => {
+                            musicBtn.classList.add('playing');
+                            console.log("自动播放成功！");
+                        }).catch(error => {
+                            console.log("自动播放被浏览器拦截，等待用户点击");
+                            // 虽然自动播放失败，但资源已经加载好了，用户点击按钮即可立即播放
+                        });
+                    }
+                }
+
+                // 步骤 E: 监听 'canplay' 事件（资源缓冲足够即可播放时触发）
+                audio.addEventListener('canplay', handleCanPlay, { once: true });
+            }
         }
 
         // --- 2. 动画与交互逻辑 ---
@@ -611,50 +646,17 @@
             galleryObserver.observe(document.getElementById('photo-gallery'), { childList: true });
         }
 
-        // --- 3. 音乐播放逻辑 (暴力重置版) ---
-        function tryPlayMusic() {
-            const audio = document.getElementById('bg-music');
-            if (!audio.src) return; // 没有源则不播放
-
-            // 尝试播放
-            const playPromise = audio.play();
-            
-            if (playPromise !== undefined) {
-                playPromise.then(_ => {
-                    // 自动播放成功
-                    document.getElementById('music-btn').classList.add('playing');
-                })
-                .catch(error => {
-                    // 自动播放失败（通常是因为浏览器策略），这不重要，等待用户点击按钮即可
-                    console.log("自动播放被浏览器拦截，需手动点击图标播放");
-                });
-            }
-        }
-
-        // 音乐控制按钮点击 (暴力重置版)
+        // 音乐控制按钮点击 (简化版)
         document.getElementById('music-btn').addEventListener('click', function() {
             const audio = document.getElementById('bg-music');
             
             if (audio.paused) {
-                // 关键修改：播放前，强制重置时间到 0，并设置音量
-                audio.currentTime = 0; 
-                audio.volume = 1.0;
-                
-                const playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(_ => {
-                        this.classList.add('playing');
-                    }).catch(err => {
-                        console.error("播放失败:", err);
-                        // 如果还是失败，尝试再次重置并播放（最后一次尝试）
-                        audio.currentTime = 0;
-                        audio.play().then(() => {
-                            this.classList.add('playing');
-                        }).catch(e => {
-                            alert("播放失败，请检查音乐文件链接是否正确");
-                        });
-                    });
-                }
+                audio.play().then(() => {
+                    this.classList.add('playing');
+                }).catch(err => {
+                    console.error("手动播放失败:", err);
+                    alert("播放失败，请检查音乐文件链接是否正确");
+                });
             } else {
                 audio.pause();
                 this.classList.remove('playing');

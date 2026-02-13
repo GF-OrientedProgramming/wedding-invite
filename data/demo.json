@@ -10,7 +10,7 @@
   "groomPhone": "138-1234-5678",
   "bridePhone": "139-8765-4321",
   "inviteText": "在这春暖花开的季节，我们要结婚了。诚挚邀请您见证我们的幸福时刻！",
-  "coverImage": "https://你的用户名.github.io/wedding-invite/assets/cover.jpg",
+  "coverImage": "https://GF-OrientedProgramming.github.io/wedding-invite/assets/cover.jpg",
   "photos": [
     "https://github.com/GF-OrientedProgramming/wedding-invite/raw/main/assets/image_1.png",
     "https://github.com/GF-OrientedProgramming/wedding-invite/raw/main/assets/image_2.jpg",
@@ -18,5 +18,5 @@
     "https://github.com/GF-OrientedProgramming/wedding-invite/raw/main/assets/image_4.jpg",
     "https://github.com/GF-OrientedProgramming/wedding-invite/raw/main/assets/image_5.jpg"
   ],
-  "music": "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Tours/Enthusiast/Tours_-_01_-_Enthusiast.mp3"
+  "music": "https://GF-OrientedProgramming.github.io/wedding-invite/assets/bgm.mp3"
 }

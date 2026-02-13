@@ -369,6 +369,7 @@
                 <h1 class="hero-names" id="cover-names">新郎 <span>&</span> 新娘</h1>
                 
                 <div class="hero-meta">
+                    <!-- 修改：只保留一行日期，JS会自动拼接星期 -->
                     <div class="hero-date-big" id="hero-date">2023.10.01</div>
                     
                     <div style="margin-top: 1.5rem; width: 40px; height: 1px; background: var(--color-accent);"></div>
@@ -478,13 +479,14 @@
         const urlParams = new URLSearchParams(window.location.search);
         const inviteId = urlParams.get('id') || 'demo';
         // 注意：请确保这里修改为您自己的用户名
-        const dataUrl = `https://GF-OrientedProgramming.github.io/wedding-invite/data/${inviteId}.json`;
+        const dataUrl = `https://你的用户名.github.io/wedding-invite/data/${inviteId}.json`;
 
         let weddingDateObj = null; // 存储解析后的婚礼日期，供倒计时使用
 
         document.addEventListener('DOMContentLoaded', () => {
             fetchData(dataUrl);
             initAnimations();
+            initAutoPlay(); // 初始化自动播放逻辑
         });
 
         async function fetchData(url) {
@@ -499,17 +501,6 @@
                 loading.style.opacity = '0';
                 setTimeout(() => loading.style.display = 'none', 500);
 
-                // 尝试自动播放音乐 (独立try-catch，不影响页面渲染)
-                try {
-                    const audio = document.getElementById('bg-music');
-                    if(data.music && data.music.trim() !== "") {
-                        audio.src = data.music;
-                        audio.play().then(() => {
-                            document.getElementById('music-btn').classList.add('playing');
-                        }).catch(e => console.log("等待用户交互播放音乐"));
-                    }
-                } catch(e) { console.log("音乐加载忽略", e); }
-
             } catch (error) {
                 console.error('Error loading data:', error);
                 document.getElementById('loading').innerHTML = '<p style="color:#666">加载失败，请检查链接</p>';
@@ -522,20 +513,30 @@
             document.getElementById('cover-names').innerHTML = `${data.groom} <span>&</span> ${data.bride}`;
             document.getElementById('footer-names').innerText = `${data.groom} & ${data.bride}`;
             
-            // 2. 日期处理
+            // 2. 日期处理 (重点修改：合并日期和星期)
             if(data.date) {
                 const dateObj = new Date(data.date);
-                const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-                const dateStr = dateObj.toLocaleDateString('zh-CN', options); // 例如：2023年10月1日星期日
+                // 获取星期几的数组
+                const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+                const weekDayStr = weekDays[dateObj.getDay()];
                 
-                document.getElementById('hero-date').innerText = data.date.replace(/-/g, '.'); // 2023.10.01
-                document.getElementById('hero-day').innerText = dateStr.split('日')[0] + '日'; // 简单处理显示中文星期
-                document.getElementById('detail-date').innerText = dateStr;
-                document.getElementById('footer-date').innerText = `© ${data.date.replace(/-/g, '.')}`;
+                // 格式化日期：2026.02.18
+                const dateStr = data.date.replace(/-/g, '.');
+                
+                // 拼接最终显示：2026.02.18 星期三
+                const finalDateStr = `${dateStr}  ${weekDayStr}`;
 
-                // 设置倒计时目标时间 (假设仪式开始时间是 data.time)
+                // 更新页面显示
+                document.getElementById('hero-date').innerText = finalDateStr;
+                
+                // 详情页的日期保持完整格式
+                const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+                document.getElementById('detail-date').innerText = dateObj.toLocaleDateString('zh-CN', options);
+                document.getElementById('footer-date').innerText = `© ${dateStr}`;
+
+                // 设置倒计时目标时间
                 if(data.time) {
-                    const timeStr = data.time; // "12:00"
+                    const timeStr = data.time; 
                     weddingDateObj = new Date(`${data.date}T${timeStr}:00`);
                 }
             }
@@ -548,7 +549,6 @@
             // 4. 详情文本
             document.getElementById('invite-text').innerText = data.inviteText || "诚挚邀请您参加我们的婚礼。";
             if(data.time) document.getElementById('detail-time').innerText = data.time;
-            // 简单估算仪式开始时间（假设在入场后30分钟，或者如果有 ceremonyTime 字段优先）
             document.getElementById('detail-ceremony').innerText = data.ceremonyTime || "待定";
 
             // 5. 联系方式
@@ -564,18 +564,16 @@
                 data.photos.forEach((photoUrl, index) => {
                     const div = document.createElement('div');
                     div.className = 'img-editorial fade-in';
-                    // 添加交错延迟动画
                     div.style.transitionDelay = `${index * 100}ms`; 
                     
                     const img = document.createElement('img');
                     img.src = photoUrl;
                     img.alt = "Wedding Photo";
-                    img.style.display = 'block'; // 强行块级显示
+                    img.style.display = 'block'; 
                     
-                    // 调试代码：如果图片加载失败，控制台会打印链接
                     img.onerror = function() {
                         console.error("图片加载失败:", photoUrl);
-                        this.style.display = 'none'; // 隐藏坏掉的图片
+                        this.style.display = 'none'; 
                     };
 
                     div.appendChild(img);
@@ -594,10 +592,8 @@
                 });
             }, { threshold: 0.1 });
             
-            // 初始观察已有元素
             document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
             
-            // 动态观察后续添加的元素（相册）
             const galleryObserver = new MutationObserver(mutations => {
                 mutations.forEach(mutation => {
                     if (mutation.addedNodes) {
@@ -609,11 +605,39 @@
                     }
                 });
             });
-            // 修复：添加配置对象
             galleryObserver.observe(document.getElementById('photo-gallery'), { childList: true });
         }
 
-        // 音乐控制
+        // --- 3. 音乐自动播放逻辑 ---
+        let hasInteracted = false;
+
+        function enableAudio() {
+            if (hasInteracted) return;
+            hasInteracted = true;
+            
+            const audio = document.getElementById('bg-music');
+            // 尝试播放
+            const playPromise = audio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(_ => {
+                    // 播放成功，显示旋转图标
+                    document.getElementById('music-btn').classList.add('playing');
+                })
+                .catch(error => {
+                    console.log("自动播放被阻止，等待手动点击");
+                });
+            }
+        }
+
+        function initAutoPlay() {
+            // 监听全文档的第一次点击事件
+            document.body.addEventListener('click', enableAudio, { once: true });
+            // 监听触摸事件（适配手机）
+            document.body.addEventListener('touchstart', enableAudio, { once: true });
+        }
+
+        // 音乐控制按钮点击
         document.getElementById('music-btn').addEventListener('click', function() {
             const audio = document.getElementById('bg-music');
             if (audio.paused) {
@@ -641,7 +665,7 @@
                 document.getElementById('days').innerText = "00";
                 document.getElementById('hours').innerText = "00";
             }
-        }, 1000); // 改为1秒更新一次，体验更好
+        }, 1000);
 
     </script>
 </body>

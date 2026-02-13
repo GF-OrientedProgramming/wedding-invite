@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>婚礼邀请函</title>
+    <style>
+        /* --- 全局样式 --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #fdfbf7; /* 暖白色背景 */
+            color: #4a4a4a;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* 隐藏滚动条但允许滚动 */
+        body::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* --- 音乐控制按钮 --- */
+        .music-control {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #eeb6b6;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            animation: rotate 5s linear infinite;
+            animation-play-state: paused; /* 默认暂停，JS控制播放 */
+        }
+
+        .music-control.playing {
+            animation-play-state: running;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* --- 封面区域 --- */
+        .cover {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-image: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url('https://picsum.photos/seed/wedding/800/1200'); /* 默认背景图 */
+            background-size: cover;
+            background-position: center;
+            color: white;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .cover h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .cover p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+
+        .btn-open {
+            padding: 12px 30px;
+            background-color: #eeb6b6;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .btn-open:active {
+            transform: scale(0.95);
+        }
+
+        /* --- 主内容区域 --- */
+        .main-content {
+            padding: 40px 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 20px 20px 0 0;
+            margin-top: -20px; /* 稍微覆盖一点封面 */
+            position: relative;
+            z-index: 20;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+            display: none; /* 默认隐藏，点击开启后显示 */
+        }
+
+        .section {
+            margin-bottom: 50px;
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #d48e8e;
+            margin-bottom: 20px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 2px;
+            background: #d48e8e;
+            margin: 8px auto 0;
+        }
+
+        /* --- 人物介绍 --- */
+        .couple-names {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            margin: 20px 0;
+        }
+        
+        .couple-names span {
+            color: #d48e8e;
+        }
+
+        /* --- 相册 --- */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .gallery img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            transition: transform 0.3s;
+        }
+
+        .gallery img:hover {
+            transform: scale(1.02);
+        }
+
+        /* --- 信息卡片 --- */
+        .info-card {
+            background: #fff9f9;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px dashed #eeb6b6;
+        }
+
+        .info-item {
+            margin-bottom: 15px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        /* --- 底部 --- */
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        /* --- 加载动画/占位 --- */
+        #loading {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 加载中 -->
+    <div id="loading">加载中...</div>
+
+    <!-- 音乐播放器 (隐藏的audio标签 + 可视化按钮) -->
+    <audio id="bg-music" loop></audio>
+    <div class="music-control" id="music-btn">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+    </div>
+
+    <!-- 封面 -->
+    <div class="cover" id="cover-section">
+        <p>我们要结婚啦</p>
+        <h1 id="cover-names">新郎 & 新娘</h1>
+        <button class="btn-open" onclick="openInvite()">开启邀请函</button>
+    </div>
+
+    <!-- 主体内容 -->
+    <div class="main-content" id="main-content">
+        
+        <!-- 邀请语 -->
+        <div class="section">
+            <div class="section-title">诚挚邀请</div>
+            <p id="invite-text">在这个特别的日子里，我们诚挚邀请您见证我们的幸福时刻。</p>
+        </div>
+
+        <!-- 我们 -->
+        <div class="section">
+            <div class="section-title">新郎 & 新娘</div>
+            <div class="couple-names">
+                <span id="groom-name">新郎</span>
+                <span>&</span>
+                <span id="bride-name">新娘</span>
+            </div>
+            <p id="love-story">这里可以写一段简短的爱情故事或寄语。</p>
+        </div>
+
+        <!-- 相册 -->
+        <div class="section">
+            <div class="section-title">美好瞬间</div>
+            <div class="gallery" id="photo-gallery">
+                <!-- 图片将由 JS 动态插入 -->
+            </div>
+        </div>
+
+        <!-- 婚礼信息 -->
+        <div class="section">
+            <div class="section-title">婚礼信息</div>
+            <div class="info-card">
+                <div class="info-item">
+                    <div class="info-label">时间</div>
+                    <div id="wedding-date">2023-10-01 12:00</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">地点</div>
+                    <div id="wedding-location">某某酒店宴会厅</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">地址</div>
+                    <div id="wedding-address">详细地址...</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2023 Wedding Invitation</p>
+    </footer>
+
+    <script>
+        // 1. 获取 URL 参数中的 ID
+        const urlParams = new URLSearchParams(window.location.search);
+        const inviteId = urlParams.get('id') || 'demo'; // 默认为 demo
+
+        // 2. 定义数据文件路径 (假设数据存放在 data/ 文件夹下)
+        const dataUrl = `https://你的用户名.github.io/wedding-invite/data/${inviteId}.json`;
+
+        // 3. 初始化页面
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData(dataUrl);
+        });
+
+        // 4. 获取数据并渲染
+        async function fetchData(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                renderPage(data);
+                
+                // 移除加载动画
+                document.getElementById('loading').style.display = 'none';
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('loading').innerText = '数据加载失败，请检查链接或稍后重试。';
+            }
+        }
+
+        // 5. 渲染页面函数
+        function renderPage(data) {
+            // 设置背景音乐
+            const audio = document.getElementById('bg-music');
+            if (data.music) {
+                audio.src = data.music;
+            }
+
+            // 设置封面
+            if (data.coverImage) {
+                document.getElementById('cover-section').style.backgroundImage = `url(${data.coverImage})`;
+            }
+            document.getElementById('cover-names').innerText = `${data.groom} & ${data.bride}`;
+
+            // 设置内容
+            document.getElementById('groom-name').innerText = data.groom;
+            document.getElementById('bride-name').innerText = data.bride;
+            document.getElementById('invite-text').innerText = data.inviteText || "诚挚邀请您参加我们的婚礼。";
+            document.getElementById('love-story').innerText = data.loveStory || "";
+            
+            document.getElementById('wedding-date').innerText = `${data.date} ${data.time}`;
+            document.getElementById('wedding-location').innerText = data.location;
+            document.getElementById('wedding-address').innerText = data.address;
+
+            // 渲染相册
+            const gallery = document.getElementById('photo-gallery');
+            gallery.innerHTML = ''; // 清空
+            if (data.photos && data.photos.length > 0) {
+                data.photos.forEach(photoUrl => {
+                    const img = document.createElement('img');
+                    img.src = photoUrl;
+                    gallery.appendChild(img);
+                });
+            }
+        }
+
+        // 6. 交互逻辑：开启邀请函
+        function openInvite() {
+            const mainContent = document.getElementById('main-content');
+            const cover = document.getElementById('cover-section');
+            const musicBtn = document.getElementById('music-btn');
+            const audio = document.getElementById('bg-music');
+
+            // 显示主体
+            mainContent.style.display = 'block';
+            
+            // 尝试播放音乐
+            audio.play().then(() => {
+                musicBtn.classList.add('playing');
+            }).catch(e => {
+                console.log("Auto-play prevented, waiting for interaction");
+            });
+
+            // 平滑滚动到主体
+            setTimeout(() => {
+                window.scrollTo({
+                    top: window.innerHeight,
+                    behavior: 'smooth'
+                });
+            }, 100);
+        }
+
+        // 音乐控制按钮点击
+        document.getElementById('music-btn').addEventListener('click', function() {
+            const audio = document.getElementById('bg-music');
+            if (audio.paused) {
+                audio.play();
+                this.classList.add('playing');
+            } else {
+                audio.pause();
+                this.classList.remove('playing');
+            }
+        });
+    </script>
+</body>
+</html>

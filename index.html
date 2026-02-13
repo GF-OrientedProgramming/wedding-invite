@@ -616,6 +616,9 @@
             hasInteracted = true;
             
             const audio = document.getElementById('bg-music');
+            // --- 新增：强制设置音量为最大 ---
+            audio.volume = 1.0;
+            
             // 尝试播放
             const playPromise = audio.play();
             

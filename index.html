@@ -611,7 +611,7 @@
             galleryObserver.observe(document.getElementById('photo-gallery'), { childList: true });
         }
 
-        // --- 3. 音乐播放逻辑 (精简版，无冲突) ---
+        // --- 3. 音乐播放逻辑 (暴力重置版) ---
         function tryPlayMusic() {
             const audio = document.getElementById('bg-music');
             if (!audio.src) return; // 没有源则不播放
@@ -631,17 +631,30 @@
             }
         }
 
-        // 音乐控制按钮点击
+        // 音乐控制按钮点击 (暴力重置版)
         document.getElementById('music-btn').addEventListener('click', function() {
             const audio = document.getElementById('bg-music');
             
             if (audio.paused) {
-                audio.play().then(() => {
-                    this.classList.add('playing');
-                }).catch(err => {
-                    console.error("播放失败:", err);
-                    alert("播放失败，请检查音乐文件链接是否正确");
-                });
+                // 关键修改：播放前，强制重置时间到 0，并设置音量
+                audio.currentTime = 0; 
+                audio.volume = 1.0;
+                
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(_ => {
+                        this.classList.add('playing');
+                    }).catch(err => {
+                        console.error("播放失败:", err);
+                        // 如果还是失败，尝试再次重置并播放（最后一次尝试）
+                        audio.currentTime = 0;
+                        audio.play().then(() => {
+                            this.classList.add('playing');
+                        }).catch(e => {
+                            alert("播放失败，请检查音乐文件链接是否正确");
+                        });
+                    });
+                }
             } else {
                 audio.pause();
                 this.classList.remove('playing');
